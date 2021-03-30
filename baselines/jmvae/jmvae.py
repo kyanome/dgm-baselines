@@ -9,20 +9,24 @@ from .model import GeneratorX, GeneratorY, InferenceX, InferenceY, Inference
 import datetime
 from tensorboardX import SummaryWriter
 from baselines.common.utils import plot_multimodal_latent_space, plot_multimodal_reconstrunction, plot_image_from_latent, plot_reconstrunction_missing_label_modality, plot_image_from_label, plot_image_latent_space
+from PIL import Image, ImageFilter
 
 class JMVAE():
     def __init__(self, z_dim, dataset,  batch_size, epochs=50):
         self._epochs = epochs
         self._device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.train_loader = dataset.train_loader
-        self.test_loader = dataset.test_loader
-        _x, _y = iter(self.test_loader).next()
+        self.test_loader = dataset.train_loader
+        _, _, _x, _, _y = iter(self.test_loader).next()
+        #pilImg = Image.fromarray(_x[3].numpy() * 255.).convert('L')
+        #pilImg.save("test.png")
         self._x = _x.to(self._device)
-        self._y = torch.eye(10)[_y].to(self._device)
+        self._y = torch.eye(2)[_y].to(self._device)
         self._batch_size = batch_size
         self._x_dim = self._x.reshape(self._batch_size, -1).size(1)
-        self._y_dim = 10
+        self._y_dim = 2
         self._z_dim = z_dim
+        
         # Tensorboard
         dt_now = datetime.datetime.now()
         exp_time = dt_now.strftime('%Y%m%d_%H:%M:%S')
@@ -57,9 +61,9 @@ class JMVAE():
         
     def test(self, epoch):
         test_loss = 0
-        for x, y in self.test_loader:
+        for _, _, x, _, y in self.test_loader:
             x = x.reshape(x.size(0), -1).to(self._device)
-            y = torch.eye(10)[y].to(self._device)
+            y = torch.eye(2)[y].to(self._device)
             loss = self._model.test({"x": x, "y": y})
             test_loss += loss
 
@@ -69,9 +73,9 @@ class JMVAE():
 
     def train(self, epoch):
         train_loss = 0
-        for x, y in tqdm(self.train_loader):
+        for _, _, x, _, y in tqdm(self.train_loader):
             x = x.reshape(x.size(0), -1).to(self._device)
-            y = torch.eye(10)[y].to(self._device)       
+            y = torch.eye(2)[y].to(self._device)   
             loss = self._model.train({"x": x, "y": y})
             train_loss += loss
         

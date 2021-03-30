@@ -8,7 +8,7 @@ def plot_reconstrunction(p, q, x):
     """
     reconstruct image given input observation x
     """
-    height, width = x.shape[2:]
+    height, width = x.shape[1:]
     x = x.reshape(x.size(0), -1)
     with torch.no_grad():
         # infer and sampling z using inference model q `.sample()` method
@@ -22,7 +22,7 @@ def plot_reconstrunction(p, q, x):
         return comparison
     
 def plot_multimodal_reconstrunction(q, p_x, x, y):
-    height, width = x.shape[2:]
+    height, width = x.shape[1:]
     x = x.reshape(x.size(0), -1)
     with torch.no_grad():
         # infer from x and y
@@ -36,7 +36,7 @@ def plot_image_from_latent(p, z_sample, x):
     """
     generate new image given latent variable z
     """
-    height, width = x.shape[2:]
+    height, width = x.shape[1:]
     x = x.reshape(x.size(0), -1)
     with torch.no_grad():
         # generate image from latent variable z using Generator model p `.sample_mean()` method
@@ -48,7 +48,7 @@ def plot_latent_space(q, z_dim, dataset, device):
     z_list = []
     y_list = []
     with torch.no_grad():
-        for i, (x, y) in enumerate(dataset):
+        for i, (_, _, x, _, y) in enumerate(dataset):
             x = x.reshape(x.size(0), -1).to(device)
             z = q.sample_mean({"x": x})
             z_list.append(z.detach().cpu().numpy())
@@ -58,7 +58,7 @@ def plot_latent_space(q, z_dim, dataset, device):
         z = np.array(z_list).reshape(-1, z_dim)
         y = np.array(y_list).flatten()
         z_reduced = TSNE(n_components=2, random_state=0).fit_transform(z)
-        plt.scatter(z_reduced[:,0],z_reduced[:,1],c=y,cmap=plt.cm.get_cmap('jet', 10))
+        plt.scatter(z_reduced[:,0],z_reduced[:,1],c=y,cmap=plt.cm.get_cmap('jet', 2))
         plt.colorbar()
         fig.canvas.draw()
         plot_image = fig.canvas.renderer._renderer
@@ -69,7 +69,7 @@ def plot_image_latent_space(q, z_dim, dataset, device):
     z_list = []
     y_list = []
     with torch.no_grad():
-        for i, (x, y) in enumerate(dataset):
+        for i, (_, _, x, _, y) in enumerate(dataset):
             x = x.reshape(x.size(0), -1).to(device)
             z = q.sample_mean({"x": x})
             z_list.append(z.detach().cpu().numpy())
@@ -79,7 +79,7 @@ def plot_image_latent_space(q, z_dim, dataset, device):
         z = np.array(z_list).reshape(-1, z_dim)
         y = np.array(y_list).flatten()
         z_reduced = TSNE(n_components=2, random_state=0).fit_transform(z)
-        plt.scatter(z_reduced[:,0],z_reduced[:,1],c=y,cmap=plt.cm.get_cmap('jet', 10))
+        plt.scatter(z_reduced[:,0],z_reduced[:,1],c=y,cmap=plt.cm.get_cmap('jet', 2))
         plt.colorbar()
         fig.canvas.draw()
         plot_image = fig.canvas.renderer._renderer
@@ -90,9 +90,9 @@ def plot_multimodal_latent_space(q, z_dim, dataset, device):
     z_list = []
     y_list = []
     with torch.no_grad():
-        for i, (x, y) in enumerate(dataset):
+        for i, (_, _, x, _, y) in enumerate(dataset):
             x = x.reshape(x.size(0), -1).to(device)
-            z = q.sample_mean({"x": x, "y": torch.eye(10)[y].to(device)})
+            z = q.sample_mean({"x": x, "y": torch.eye(2)[y].to(device)})
             z_list.append(z.detach().cpu().numpy())
             y_list.append(y.numpy())
             if i == 2:
@@ -100,7 +100,7 @@ def plot_multimodal_latent_space(q, z_dim, dataset, device):
         z = np.array(z_list).reshape(-1, z_dim)
         y = np.array(y_list).flatten()
         z_reduced = TSNE(n_components=2, random_state=0).fit_transform(z)
-        plt.scatter(z_reduced[:,0],z_reduced[:,1],c=y,cmap=plt.cm.get_cmap('jet', 10))
+        plt.scatter(z_reduced[:,0],z_reduced[:,1],c=y,cmap=plt.cm.get_cmap('jet', 2))
         plt.colorbar()
         fig.canvas.draw()
         plot_image = fig.canvas.renderer._renderer
@@ -108,7 +108,7 @@ def plot_multimodal_latent_space(q, z_dim, dataset, device):
 
 
 def plot_reconstrunction_missing_label_modality(q_x, p_x, x):
-    height, width = x.shape[2:]
+    height, width = x.shape[1:]
     x = x.reshape(x.size(0), -1)
     with torch.no_grad():
         # infer from x (image modality) only
@@ -119,7 +119,7 @@ def plot_reconstrunction_missing_label_modality(q_x, p_x, x):
         return comparison
     
 def plot_image_from_label(q_y, p_x, x, y):
-    height, width = x.shape[2:]
+    height, width = x.shape[1:]
     x = x.reshape(x.size(0), -1)
     with torch.no_grad():
         x_all = [x.view(-1, 1, height, width)]

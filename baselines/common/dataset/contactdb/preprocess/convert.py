@@ -27,9 +27,8 @@ def main():
             save_images(thermal_imgs, mask_imgs, rgb_imgs, depth_imgs, os.path.join(save_path, i_name_flag, o_name))
     
 
-
 def annotation():
-    dir_path = "../data"
+    dir_path = "/home/keita/Research/AIST/dgm-baselines/baselines/common/dataset/contactdb/data"
     images_names = ["thermal_images", "rgb_images", "depth_images"]
     thermal_list, rgb_list, depth_list, object_labels, intention_labels = [], [], [], [], []
     
@@ -69,6 +68,7 @@ def annotation():
     object_labels = np.array(object_labels)
     intention_labels = np.array(intention_labels)
     # save array
+    my_makedirs(os.path.join(dir_path,"train"))
     np.save(os.path.join(dir_path,"train", 'thermal') , thermal_list)
     np.save(os.path.join(dir_path,"train", 'rgb'), rgb_list)
     np.save(os.path.join(dir_path,"train", 'depth'), depth_list)
