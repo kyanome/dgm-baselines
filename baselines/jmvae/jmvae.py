@@ -16,15 +16,16 @@ class JMVAE():
         self._epochs = epochs
         self._device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.train_loader = dataset.train_loader
-        self.test_loader = dataset.train_loader
-        _, _, _x, _, _y = iter(self.test_loader).next()
+        self.test_loader = dataset.test_loader
+        _, _, _x, _y1, _y2 = iter(self.test_loader).next()
         #pilImg = Image.fromarray(_x[3].numpy() * 255.).convert('L')
         #pilImg.save("test.png")
         self._x = _x.to(self._device)
-        self._y = torch.eye(2)[_y].to(self._device)
+        self._y2_ulabel = len(_y2.unique())
+        self._y2 = torch.eye(self._y2_ulabel)[_y2].to(self._device)
         self._batch_size = batch_size
         self._x_dim = self._x.reshape(self._batch_size, -1).size(1)
-        self._y_dim = 2
+        self._y2_dim = self._y2_ulabel
         self._z_dim = z_dim
         
         # Tensorboard
@@ -39,11 +40,11 @@ class JMVAE():
     def init_model(self):
         # Model and Loss
         self.p_x = GeneratorX(self._x_dim, self._z_dim).to(self._device)
-        self.p_y = GeneratorY(self._y_dim, self._z_dim).to(self._device)
+        self.p_y = GeneratorY(self._y2_dim, self._z_dim).to(self._device)
         p = self.p_x * self.p_y
         self.q_x = InferenceX(self._x_dim, self._z_dim).to(self._device)
-        self.q_y = InferenceY(self._y_dim, self._z_dim).to(self._device)
-        q = Inference(self._x_dim, self._y_dim, self._z_dim).to(self._device)
+        self.q_y = InferenceY(self._y2_dim, self._z_dim).to(self._device)
+        q = Inference(self._x_dim, self._y2_dim, self._z_dim).to(self._device)
         prior = Normal(loc=torch.tensor(0.), scale=torch.tensor(1.), var=["z"], features_shape=[self._z_dim], name="p_{prior}").to(self._device)
         kl = KullbackLeibler(q, prior)
         kl_x = KullbackLeibler(q, self.q_x)
@@ -63,7 +64,7 @@ class JMVAE():
         test_loss = 0
         for _, _, x, _, y in self.test_loader:
             x = x.reshape(x.size(0), -1).to(self._device)
-            y = torch.eye(2)[y].to(self._device)
+            y = torch.eye(self._y2_ulabel)[y].to(self._device)
             loss = self._model.test({"x": x, "y": y})
             test_loss += loss
 
@@ -75,7 +76,7 @@ class JMVAE():
         train_loss = 0
         for _, _, x, _, y in tqdm(self.train_loader):
             x = x.reshape(x.size(0), -1).to(self._device)
-            y = torch.eye(2)[y].to(self._device)   
+            y = torch.eye(self._y2_ulabel)[y].to(self._device)   
             loss = self._model.train({"x": x, "y": y})
             train_loss += loss
         
@@ -84,10 +85,10 @@ class JMVAE():
         return train_loss
     
     def to_tensorboard(self, train_loss, test_loss, epoch):
-        recon = plot_multimodal_reconstrunction(self.q, self.p_x, self._x[:8], self._y[:8])
-        recon_from_label = plot_image_from_label(self.q_y, self.p_x, self._x[:8], self._y[:8])
+        recon = plot_multimodal_reconstrunction(self.q, self.p_x, self._x[:8], self._y2[:8])
+        recon_from_label = plot_image_from_label(self.q_y, self.p_x, self._x[:8], self._y2[:8])
         recon_from_image = plot_reconstrunction_missing_label_modality(self.q_x, self.p_x, self._x[:8])
-        multi_modal_latent_space = plot_multimodal_latent_space(self.q, self._z_dim, self.test_loader, self._device)
+        multi_modal_latent_space = plot_multimodal_latent_space(self.q, self._z_dim, self.test_loader, self._y2_ulabel, self._device)
         image_latent_space = plot_image_latent_space(self.q_x, self._z_dim, self.test_loader, self._device)
         self.writer.add_scalar('train_loss', train_loss.item(), epoch)
         self.writer.add_scalar('test_loss', test_loss.item(), epoch)   

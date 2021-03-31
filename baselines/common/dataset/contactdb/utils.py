@@ -2,7 +2,7 @@ import os
 import glob
 import matplotlib.pyplot as plt
 import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageOps
 
 def my_makedirs(path):
     if not os.path.isdir(path):
@@ -51,11 +51,10 @@ def save_images(ther_img, mask_img, rgb_img, depth_img, path):
     N = len(ther_img)
     for i in range(N):
         try:
-            thermal = np.array(Image.open(ther_img[i]).convert('L'))
+            thermal = np.array(ImageOps.invert(Image.open(ther_img[i]).convert('L')))
             mask = np.array(Image.open(mask_img[i]).convert('L'))
             rgb = np.array(Image.open(rgb_img[i]))
             depth = np.array(Image.open(depth_img[i]))
-            thermal = thermal * mask
             rgb = rgb * np.repeat(mask[...,None],3,axis=2)
             depth = depth * mask
             y1, y2, x1, x2 = get_bbox(mask)
@@ -65,9 +64,11 @@ def save_images(ther_img, mask_img, rgb_img, depth_img, path):
             thermal = thermal[y1-buffer_y:y2+buffer_y, x1-buffer_x:x2+buffer_x] 
             rgb = rgb[y1-buffer_y:y2+buffer_y, x1-buffer_x:x2+buffer_x] 
             depth = depth[y1-buffer_y:y2+buffer_y, x1-buffer_x:x2+buffer_x]
-            if 6750 < thermal.flatten().sum():
-                Image.fromarray(thermal).save(os.path.join(path, "thermal_images", "{:0=2}_thermal.png".format(i)))
-                Image.fromarray(rgb).save(os.path.join(path, "rgb_images", "{:0=2}_rgb.png".format(i)))
-                Image.fromarray(depth).save(os.path.join(path, "depth_images", "{:0=2}_depth.png".format(i)))
+            _thermal = thermal * mask
+            _thermal[_thermal <= 220] = 0
+            Image.fromarray(_thermal).save(os.path.join(path, "thermal_images", "{:0=2}_thermal.png".format(i)))
+            Image.fromarray(thermal).save(os.path.join(path, "normal_thermal_images", "{:0=2}_thermal.png".format(i)))
+            Image.fromarray(rgb).save(os.path.join(path, "rgb_images", "{:0=2}_rgb.png".format(i)))
+            Image.fromarray(depth).save(os.path.join(path, "depth_images", "{:0=2}_depth.png".format(i)))
         except:
             pass    

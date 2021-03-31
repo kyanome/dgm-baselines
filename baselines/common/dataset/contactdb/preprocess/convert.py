@@ -9,7 +9,7 @@ from utils import my_makedirs, get_dir_name, get_images, get_bbox, save_images, 
 
     
 def main():
-    data_path = "./contact_data"
+    data_path = "/media/keita/Seagate Expansion Drive/data/contactdb_data"
     save_path = "../data"
     intention_names = get_dir_name(data_path)
     images_names = ["thermal_images", "rgb_images", "depth_images"]
@@ -21,6 +21,7 @@ def main():
         for o_name in object_names:
             print(o_name)
             my_makedirs(os.path.join(save_path, i_name_flag, o_name, images_names[0]))
+            my_makedirs(os.path.join(save_path, i_name_flag, o_name, "normal_thermal_images"))
             my_makedirs(os.path.join(save_path, i_name_flag, o_name, images_names[1]))
             my_makedirs(os.path.join(save_path, i_name_flag, o_name, images_names[2]))
             thermal_imgs, mask_imgs, rgb_imgs, depth_imgs = get_images(os.path.join(data_path, i_name, o_name), images_names)
@@ -28,7 +29,7 @@ def main():
     
 
 def annotation():
-    dir_path = "/home/keita/Research/AIST/dgm-baselines/baselines/common/dataset/contactdb/data"
+    dir_path = "/home/keita/Research/dgm-baselines/baselines/common/dataset/contactdb/data"
     images_names = ["thermal_images", "rgb_images", "depth_images"]
     thermal_list, rgb_list, depth_list, object_labels, intention_labels = [], [], [], [], []
     
@@ -77,5 +78,5 @@ def annotation():
     
 
 if __name__ == '__main__':
-    annotation()
+    main()
     

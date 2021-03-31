@@ -67,40 +67,40 @@ def plot_latent_space(q, z_dim, dataset, device):
 def plot_image_latent_space(q, z_dim, dataset, device):
     fig = plt.figure()
     z_list = []
-    y_list = []
+    y1_list = []
     with torch.no_grad():
-        for i, (_, _, x, _, y) in enumerate(dataset):
+        for i, (_, _, x, y1, y2) in enumerate(dataset):
             x = x.reshape(x.size(0), -1).to(device)
             z = q.sample_mean({"x": x})
             z_list.append(z.detach().cpu().numpy())
-            y_list.append(y.numpy())
+            y1_list.append(y1.numpy())
             if i == 2:
                 break
         z = np.array(z_list).reshape(-1, z_dim)
-        y = np.array(y_list).flatten()
+        y = np.array(y1_list).flatten()
         z_reduced = TSNE(n_components=2, random_state=0).fit_transform(z)
-        plt.scatter(z_reduced[:,0],z_reduced[:,1],c=y,cmap=plt.cm.get_cmap('jet', 2))
+        plt.scatter(z_reduced[:,0],z_reduced[:,1],c=y)
         plt.colorbar()
         fig.canvas.draw()
         plot_image = fig.canvas.renderer._renderer
         return np.array(plot_image).transpose(2, 0, 1)
 
-def plot_multimodal_latent_space(q, z_dim, dataset, device):
+def plot_multimodal_latent_space(q, z_dim, dataset, y_ulabel, device):
     fig = plt.figure()
     z_list = []
-    y_list = []
+    y1_list = []
     with torch.no_grad():
-        for i, (_, _, x, _, y) in enumerate(dataset):
+        for i, (_, _, x, y1, y2) in enumerate(dataset):
             x = x.reshape(x.size(0), -1).to(device)
-            z = q.sample_mean({"x": x, "y": torch.eye(2)[y].to(device)})
+            z = q.sample_mean({"x": x, "y": torch.eye(y_ulabel)[y2].to(device)})
             z_list.append(z.detach().cpu().numpy())
-            y_list.append(y.numpy())
+            y1_list.append(y1.numpy())
             if i == 2:
                 break
         z = np.array(z_list).reshape(-1, z_dim)
-        y = np.array(y_list).flatten()
+        y1_list = np.array(y1_list).flatten()
         z_reduced = TSNE(n_components=2, random_state=0).fit_transform(z)
-        plt.scatter(z_reduced[:,0],z_reduced[:,1],c=y,cmap=plt.cm.get_cmap('jet', 2))
+        plt.scatter(z_reduced[:,0],z_reduced[:,1],c=y1_list)
         plt.colorbar()
         fig.canvas.draw()
         plot_image = fig.canvas.renderer._renderer
@@ -122,14 +122,12 @@ def plot_image_from_label(q_y, p_x, x, y):
     height, width = x.shape[1:]
     x = x.reshape(x.size(0), -1)
     with torch.no_grad():
-        x_all = [x.view(-1, 1, height, width)]
-        for i in range(7):
-            # infer from y (label modality) only
-            z = q_y.sample({"y": y}, return_all=False)
-            
-            # generate image from latent variable
-            recon_batch = p_x.sample_mean(z).view(-1, 1, height, width)
-            x_all.append(recon_batch)
-    
-        comparison = torch.cat(x_all).cpu()
+        #x_all = [x.view(-1, 1, height, width)]
+        # infer from y (label modality) only
+        z = q_y.sample({"y": y}, return_all=False)
+        # generate image from latent variable
+        recon_batch = p_x.sample_mean(z).view(-1, 1, height, width)
+        comparison = torch.cat([x.view(-1, 1, height, width), recon_batch]).cpu()
+        #x_all.append(recon_batch)
+        #comparison = torch.cat(x_all).cpu()
         return comparison
