@@ -75,10 +75,12 @@ def plot_image_latent_space(q, z_dim, dataset, device):
             z = q.sample_mean({"x": x})
             z_list.append(z.detach().cpu().numpy())
             y2_list.append(y2.numpy())
-            if i == 1:
+            if i == 2:
                 break
-        z = np.concatenate([np.array(z_list)[0], np.array(z_list)[1], np.array(z_list)[2]])
-        y = np.concatenate([np.array(y2_list)[0], np.array(y2_list)[1], np.array(y2_list)[2]])
+        z = np.array(z_list, dtype="object")
+        y = np.array(y2_list, dtype="object")
+        z = np.concatenate([z[0], z[1], z[2]])
+        y = np.concatenate([y[0], y[1], y[2]])
         z_reduced = TSNE(n_components=2, random_state=0).fit_transform(z)
         plt.scatter(z_reduced[:,0],z_reduced[:,1],c=y)
         plt.colorbar()
@@ -97,10 +99,12 @@ def plot_multimodal_latent_space(q, z_dim, dataset, y_ulabel, device):
             z = q.sample_mean({"x": x, "y": torch.eye(y_ulabel)[y2].to(device)})
             z_list.append(z.detach().cpu().numpy())
             y2_list.append(y2.numpy())
-            if i == 1:
+            if i == 2:
                 break
-        z = np.concatenate([np.array(z_list)[0], np.array(z_list)[1], np.array(z_list)[2]])
-        y = np.concatenate([np.array(y2_list)[0], np.array(y2_list)[1], np.array(y2_list)[2]])
+        z = np.array(z_list, dtype="object")
+        y = np.array(y2_list, dtype="object")
+        z = np.concatenate([z[0], z[1], z[2]])
+        y = np.concatenate([y[0], y[1], y[2]])
         z_reduced = TSNE(n_components=2, random_state=0).fit_transform(z)
         plt.scatter(z_reduced[:,0],z_reduced[:,1],c=y)
         plt.colorbar()
