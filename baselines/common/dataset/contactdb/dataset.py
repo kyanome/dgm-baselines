@@ -24,7 +24,7 @@ class Dataset(data.Dataset):
         
         self.input_size = (64, 64)
         self.len = len(self.rgb_paths)
-        
+    
         
     def __len__(self):
         return self.len
@@ -33,6 +33,9 @@ class Dataset(data.Dataset):
         image = Image.open(path)
         image = image.resize(self.input_size)
         image = np.array(image)
+        #apply_mask_thermal = apply_mask_thermal / 255.0
+        #thresh = max_frac * np.max(apply_mask_thermal)
+        #apply_mask_thermal = np.exp(sigmoid_k * (apply_mask_thermal-thresh)) / (1 + np.exp(sigmoid_k * (apply_mask_thermal-thresh)))
         #image = np.transpose(image, (2, 0, 1))
         image = torch.from_numpy(image.astype(np.float32)) / 255.
         return image
@@ -57,7 +60,7 @@ class Dataset(data.Dataset):
 
 class ContactDB():
     def __init__(self, batch_size=32):
-        dataset = Dataset("/home/keita/Research/dgm-baselines/baselines/common/dataset/contactdb/data/train")
+        dataset = Dataset("/home/keita/Research/AIST/dgm-baselines/baselines/common/dataset/contactdb/data/train/")
         n_samples = len(dataset) 
         train_size = int(len(dataset) * 0.8) 
         val_size = n_samples - train_size

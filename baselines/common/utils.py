@@ -68,16 +68,17 @@ def plot_image_latent_space(q, z_dim, dataset, device):
     fig = plt.figure()
     z_list = []
     y1_list = []
+    y2_list = []
     with torch.no_grad():
         for i, (_, _, x, y1, y2) in enumerate(dataset):
             x = x.reshape(x.size(0), -1).to(device)
             z = q.sample_mean({"x": x})
             z_list.append(z.detach().cpu().numpy())
-            y1_list.append(y1.numpy())
-            if i == 2:
+            y2_list.append(y2.numpy())
+            if i == 1:
                 break
-        z = np.array(z_list).reshape(-1, z_dim)
-        y = np.array(y1_list).flatten()
+        z = np.concatenate([np.array(z_list)[0], np.array(z_list)[1], np.array(z_list)[2]])
+        y = np.concatenate([np.array(y2_list)[0], np.array(y2_list)[1], np.array(y2_list)[2]])
         z_reduced = TSNE(n_components=2, random_state=0).fit_transform(z)
         plt.scatter(z_reduced[:,0],z_reduced[:,1],c=y)
         plt.colorbar()
@@ -89,18 +90,19 @@ def plot_multimodal_latent_space(q, z_dim, dataset, y_ulabel, device):
     fig = plt.figure()
     z_list = []
     y1_list = []
+    y2_list = []
     with torch.no_grad():
         for i, (_, _, x, y1, y2) in enumerate(dataset):
             x = x.reshape(x.size(0), -1).to(device)
             z = q.sample_mean({"x": x, "y": torch.eye(y_ulabel)[y2].to(device)})
             z_list.append(z.detach().cpu().numpy())
-            y1_list.append(y1.numpy())
-            if i == 2:
+            y2_list.append(y2.numpy())
+            if i == 1:
                 break
-        z = np.array(z_list).reshape(-1, z_dim)
-        y1_list = np.array(y1_list).flatten()
+        z = np.concatenate([np.array(z_list)[0], np.array(z_list)[1], np.array(z_list)[2]])
+        y = np.concatenate([np.array(y2_list)[0], np.array(y2_list)[1], np.array(y2_list)[2]])
         z_reduced = TSNE(n_components=2, random_state=0).fit_transform(z)
-        plt.scatter(z_reduced[:,0],z_reduced[:,1],c=y1_list)
+        plt.scatter(z_reduced[:,0],z_reduced[:,1],c=y)
         plt.colorbar()
         fig.canvas.draw()
         plot_image = fig.canvas.renderer._renderer

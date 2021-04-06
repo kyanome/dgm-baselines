@@ -1,5 +1,5 @@
 from baselines import VAE, MVAE, JMVAE
-from baselines.common.dataset import MNIST
+from baselines.common.dataset.mnist import MNIST
 from baselines.common.dataset.contactdb import ContactDB
 
 def main():
